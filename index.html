@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>خريطة تفاعلية لدول الخليج العربي</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css">
+    <style>
+        body { font-family: Arial, sans-serif; text-align: center; direction: rtl; }
+        #map { height: 80vh; width: 100%; }
+        .info-box { background-color: #fff; padding: 10px; border-radius: 8px; width: 300px; margin: 20px auto; }
+        canvas { max-width: 300px; margin: auto; }
+    </style>
+</head>
+<body>
+
+    <h1>خريطة تفاعلية لدول الخليج العربي</h1>
+    <div id="map"></div>
+
+    <!-- مربع المعلومات الذي يظهر عند النقر -->
+    <div id="info" class="info-box" style="display: none;">
+        <h3 id="countryName"></h3>
+        <canvas id="countryChart"></canvas>
+    </div>
+
+    <!-- مكتبات Leaflet و Chart.js -->
+    <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <script>
+        // إعداد الخريطة وتحديد مركزها
+        var map = L.map('map').setView([24.774265, 46.738586], 5); // المركز على السعودية
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 18 }).addTo(map);
+
+        // بيانات دول الخليج العربي
+        var gulfCountries = {
+            "السعودية": { coords: [23.8859, 45.0792], population: 34813871, currency: "ريال سعودي", leader: "الملك سلمان بن عبدالعزيز" },
+            "الإمارات": { coords: [23.4241, 53.8478], population: 9890400, currency: "درهم إماراتي", leader: "الشيخ محمد بن زايد" },
+            "الكويت": { coords: [29.3759, 47.9774], population: 4270571, currency: "دينار كويتي", leader: "الشيخ نواف الأحمد الجابر الصباح" },
+            "البحرين": { coords: [26.0667, 50.5577], population: 1701575, currency: "دينار بحريني", leader: "الملك حمد بن عيسى" },
+            "قطر": { coords: [25.3548, 51.1839], population: 2881060, currency: "ريال قطري", leader: "الشيخ تميم بن حمد آل ثاني" },
+            "عُمان": { coords: [21.4735, 55.9754], population: 5106626, currency: "ريال عماني", leader: "السلطان هيثم بن طارق" }
+        };
+
+        // إعداد وظيفة للنقر على كل دولة
+        Object.keys(gulfCountries).forEach(function(country) {
+            var countryData = gulfCountries[country];
+            var marker = L.marker(countryData.coords).addTo(map).bindPopup(country);
+
+            marker.on('click', function() {
+                showInfo(country, countryData);
+            });
+        });
+
+        // عرض المعلومات في مربع المعلومات
+        function showInfo(country, data) {
+            document.getElementById('countryName').innerText = country;
+            document.getElementById('info').style.display = 'block';
+
+            // إعداد المخطط البياني
+            var ctx = document.getElementById('countryChart').getContext('2d');
+            new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: ["عدد السكان", "العملة", "الزعيم"],
+                    datasets: [{
+                        label: 'معلومات عن ' + country,
+                        data: [data.population, 1, 1], // عدد السكان فقط كبيانات عددية
+                        backgroundColor: ["#3e95cd", "#8e5ea2", "#3cba9f"],
+                        borderColor: "#fff",
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    scales: {
+                        y: { beginAtZero: true }
+                    },
+                    plugins: {
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    if (context.dataIndex === 0) {
+                                        return "عدد السكان: " + data.population;
+                                    } else if (context.dataIndex === 1) {
+                                        return "العملة: " + data.currency;
+                                    } else {
+                                        return "الزعيم: " + data.leader;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+    </script>
+
+</body>
+</html>
